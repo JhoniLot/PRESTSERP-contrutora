@@ -1,11 +1,12 @@
 /* ==========================================================================
-   PRESTSERP CONSTRUTORA - Interactive JS Logic
+   PRESTSERP CONSTRUTORA - LOGIC & EFFECTS
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // 1. Header Scroll Effect
+    // --- 1. SCROLL HEADER TRANSITION ---
     const header = document.querySelector('.main-header');
+    
     const handleScroll = () => {
         if (window.scrollY > 50) {
             header.classList.add('scrolled');
@@ -14,224 +15,280 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     window.addEventListener('scroll', handleScroll);
-    handleScroll(); // Initial check on load
+    handleScroll();
 
-    // 2. Mobile Responsive Navigation
-    const menuToggle = document.getElementById('menuToggle');
-    const navMenu = document.getElementById('navMenu');
+    // --- 2. MOBILE MENU DRAWER ---
+    const mobileToggle = document.getElementById('mobile-toggle');
+    const navMenu = document.getElementById('nav-menu');
     const navLinks = document.querySelectorAll('.nav-link');
 
-    if (menuToggle && navMenu) {
-        menuToggle.addEventListener('click', () => {
-            menuToggle.classList.toggle('active');
+    if (mobileToggle && navMenu) {
+        mobileToggle.addEventListener('click', () => {
             navMenu.classList.toggle('active');
-            header.classList.toggle('menu-open');
-            // Toggle body scrolling
-            document.body.style.overflow = navMenu.classList.contains('active') ? 'hidden' : '';
+            mobileToggle.classList.toggle('active');
+            
+            // Hamburger to Close cross animation
+            const bars = mobileToggle.querySelectorAll('.bar');
+            if (mobileToggle.classList.contains('active')) {
+                bars[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
+                bars[1].style.opacity = '0';
+                bars[2].style.transform = 'rotate(-45deg) translate(5px, -5px)';
+            } else {
+                bars[0].style.transform = 'none';
+                bars[1].style.opacity = '1';
+                bars[2].style.transform = 'none';
+            }
         });
 
-        // Close menu when a link is clicked
+        // Close menu when clicking a link
         navLinks.forEach(link => {
             link.addEventListener('click', () => {
-                menuToggle.classList.remove('active');
                 navMenu.classList.remove('active');
-                header.classList.remove('menu-open');
-                document.body.style.overflow = '';
+                mobileToggle.classList.remove('active');
+                const bars = mobileToggle.querySelectorAll('.bar');
+                bars[0].style.transform = 'none';
+                bars[1].style.opacity = '1';
+                bars[2].style.transform = 'none';
             });
         });
     }
 
-    // 3. Scroll Reveal System using Intersection Observer
-    const revealElements = document.querySelectorAll('.reveal-fade, .reveal-slide, .reveal-slide-left, .reveal-slide-right');
+    // --- 3. DYNAMIC SCROLL ACTIVE NAV LINK ---
+    const sections = document.querySelectorAll('section[id]');
+    
+    window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.clientHeight;
+            if (window.pageYOffset >= (sectionTop - 150)) {
+                current = section.getAttribute('id');
+            }
+        });
+
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href').slice(1) === current) {
+                link.classList.add('active');
+            }
+        });
+    });
+
+    // --- 4. SCROLL REVEAL ANIMATIONS (Intersection Observer) ---
+    const reveals = document.querySelectorAll('.reveal-left, .reveal-right, .reveal-up');
     
     if ('IntersectionObserver' in window) {
         const revealObserver = new IntersectionObserver((entries, observer) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    const delay = entry.target.getAttribute('data-delay') || 0;
-                    setTimeout(() => {
-                        entry.target.classList.add('active');
-                    }, delay);
-                    observer.unobserve(entry.target);
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target); // Trigger only once
                 }
             });
         }, {
-            threshold: 0.02, // Extremely sensitive trigger
-            rootMargin: '0px 0px 150px 0px' // Starts animating 150px before entering viewport
+            threshold: 0.02,
+            rootMargin: '0px 0px 150px 0px'
         });
 
-        revealElements.forEach(el => revealObserver.observe(el));
+        reveals.forEach(element => {
+            revealObserver.observe(element);
+        });
     } else {
         // Fallback for older browsers
-        revealElements.forEach(el => el.classList.add('active'));
+        reveals.forEach(element => element.classList.add('active'));
     }
 
-    // Safety timeout fallback: Make sure everything is visible after a short duration
-    // even if IntersectionObserver fails to fire due to height or viewport edge cases.
+    // Bulletproof reveal fallback: force everything to active state after a short delay
     setTimeout(() => {
-        revealElements.forEach(el => {
-            if (!el.classList.contains('active')) {
-                el.classList.add('active');
+        reveals.forEach(element => {
+            if (!element.classList.contains('active')) {
+                element.classList.add('active');
             }
         });
     }, 1500);
 
-    // 4. Metrics Animated Counters
-    const metricsSection = document.querySelector('.metrics-section');
-    const metricNumbers = document.querySelectorAll('.metric-number');
-    let countersStarted = false;
+    // --- 5. STATS COUNTER ANIMATION ---
+    const statsSection = document.querySelector('.stats-section');
+    const statNumbers = document.querySelectorAll('.stat-number');
+    let counted = false;
 
-    const startCounters = () => {
-        metricNumbers.forEach(counter => {
-            const target = parseInt(counter.getAttribute('data-target'), 10);
-            const duration = 2000; // 2 seconds
-            const stepTime = Math.max(Math.floor(duration / target), 15);
+    const countStats = () => {
+        statNumbers.forEach(stat => {
+            const target = +stat.getAttribute('data-target');
+            const countTo = target;
             let current = 0;
-
-            const timer = setInterval(() => {
-                current += Math.ceil(target / (duration / stepTime));
-                if (current >= target) {
-                    counter.textContent = target;
-                    clearInterval(timer);
+            const increment = Math.max(1, countTo / 50); // speed
+            
+            const updateCount = () => {
+                current += increment;
+                if (current < countTo) {
+                    stat.innerText = Math.ceil(current);
+                    setTimeout(updateCount, 25);
                 } else {
-                    counter.textContent = current;
+                    stat.innerText = countTo;
                 }
-            }, stepTime);
+            };
+            
+            updateCount();
         });
     };
 
-    if ('IntersectionObserver' in window && metricsSection) {
-        const metricsObserver = new IntersectionObserver((entries, observer) => {
+    if (statsSection && 'IntersectionObserver' in window) {
+        const statsObserver = new IntersectionObserver((entries, observer) => {
             entries.forEach(entry => {
-                if (entry.isIntersecting && !countersStarted) {
-                    countersStarted = true;
-                    startCounters();
+                if (entry.isIntersecting && !counted) {
+                    countStats();
+                    counted = true;
                     observer.unobserve(entry.target);
                 }
             });
-        }, { threshold: 0.3 });
+        }, {
+            threshold: 0.2
+        });
 
-        metricsObserver.observe(metricsSection);
-    } else if (metricsSection) {
-        startCounters();
+        statsObserver.observe(statsSection);
+    } else if (statsSection) {
+        countStats();
     }
 
-    // 5. Portfolio Filtering System
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    const projectCards = document.querySelectorAll('.project-card');
+    // --- 6. INTERACTIVE PORTFOLIO FILTER ---
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const portfolioItems = document.querySelectorAll('.portfolio-item');
 
-    tabButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
+    filterButtons.forEach(button => {
+        button.addEventListener('click', () => {
             // Remove active from other buttons
-            tabButtons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
 
-            const filterValue = btn.getAttribute('data-filter');
+            const filterValue = button.getAttribute('data-filter');
 
-            projectCards.forEach(card => {
-                const category = card.getAttribute('data-category');
+            portfolioItems.forEach(item => {
+                const category = item.getAttribute('data-category');
                 
-                // Hide with micro-animations
-                if (filterValue === 'all' || category === filterValue) {
-                    card.style.display = 'block';
+                // Hide with transition, then set display
+                if (filterValue === 'all' || filterValue === category) {
+                    item.style.display = 'block';
                     setTimeout(() => {
-                        card.style.opacity = '1';
-                        card.style.transform = 'scale(1)';
+                        item.style.opacity = '1';
+                        item.style.transform = 'scale(1)';
                     }, 50);
                 } else {
-                    card.style.opacity = '0';
-                    card.style.transform = 'scale(0.8)';
+                    item.style.opacity = '0';
+                    item.style.transform = 'scale(0.8)';
                     setTimeout(() => {
-                        card.style.display = 'none';
-                    }, 300);
+                        item.style.display = 'none';
+                    }, 400); // matching CSS transition
                 }
             });
         });
     });
 
-    // 6. Interactive Contact Form Submission & WhatsApp Link redirection
-    const contactForm = document.getElementById('contactForm');
-    const formStatus = document.getElementById('formStatus');
+    // --- 7. CONTACT FORM VALIDATION & WHATSAPP REDIRECT ---
+    const contactForm = document.getElementById('contact-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const formStatus = document.getElementById('form-status');
 
     if (contactForm) {
         contactForm.addEventListener('submit', (e) => {
             e.preventDefault();
 
-            const name = document.getElementById('name').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const phone = document.getElementById('phone').value.trim();
-            const serviceType = document.getElementById('service-type').value;
-            const message = document.getElementById('message').value.trim();
-            
-            // Basic UI Feedback during submission
-            const submitBtn = contactForm.querySelector('.btn-submit');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<span>Processando... <i class="fa-solid fa-spinner fa-spin"></i></span>';
-            submitBtn.disabled = true;
+            // Inputs
+            const nameInput = document.getElementById('name');
+            const emailInput = document.getElementById('email');
+            const phoneInput = document.getElementById('phone');
+            const messageInput = document.getElementById('message');
 
-            // Simulate form submission to backend or direct redirect to WhatsApp
-            setTimeout(() => {
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
+            let isValid = true;
 
-                // 1. Success Message on screen
-                formStatus.className = 'form-status-msg success';
-                formStatus.innerHTML = '<i class="fa-solid fa-circle-check"></i> Proposta recebida com sucesso! Redirecionando para o nosso time de engenharia...';
-                
-                // 2. Clear Form
-                contactForm.reset();
+            // Simple validation functions
+            const setError = (input, show) => {
+                const group = input.parentElement;
+                if (show) {
+                    group.classList.add('invalid');
+                    isValid = false;
+                } else {
+                    group.classList.remove('invalid');
+                }
+            };
 
-                // 3. Construct WhatsApp Message URL
-                const text = `Olá, meu nome é *${name}* (${email}). Gostaria de fazer um orçamento para uma obra do tipo *${serviceType.toUpperCase()}*.\n\n*Detalhes do Projeto:*\n${message}\n\n*Contato:* ${phone}`;
+            // Name
+            setError(nameInput, nameInput.value.trim().length === 0);
+
+            // Email Regex
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            setError(emailInput, !emailRegex.test(emailInput.value.trim()));
+
+            // Phone (simple length check)
+            setError(phoneInput, phoneInput.value.trim().length < 8);
+
+            // Message
+            setError(messageInput, messageInput.value.trim().length === 0);
+
+            if (isValid) {
+                // Change UI state
+                submitBtn.disabled = true;
+                submitBtn.querySelector('span').innerText = 'Redirecionando...';
+                submitBtn.querySelector('i').className = 'fa-solid fa-circle-notch fa-spin';
+
+                // Construct WhatsApp Lead message
+                const name = nameInput.value.trim();
+                const email = emailInput.value.trim();
+                const phone = phoneInput.value.trim();
+                const message = messageInput.value.trim();
+
+                const text = `Olá! Meu nome é *${name}* (${email}). Gostaria de fazer uma reunião com o corpo de engenharia da *PRESTSERP*.\n\n*Detalhes do Projeto:*\n${message}\n\n*Contato:* ${phone}`;
                 const encodedText = encodeURIComponent(text);
                 const whatsappUrl = `https://wa.me/551632360944?text=${encodedText}`;
 
-                // 4. Open WhatsApp in new tab after 2 seconds
                 setTimeout(() => {
-                    window.open(whatsappUrl, '_blank');
-                    formStatus.innerHTML = '';
-                    formStatus.className = 'form-status-msg';
-                }, 2000);
+                    submitBtn.disabled = false;
+                    submitBtn.querySelector('span').innerText = 'Iniciar Atendimento Private';
+                    submitBtn.querySelector('i').className = 'fa-solid fa-paper-plane';
 
-            }, 1500);
-        });
-    }
+                    // Show success status
+                    formStatus.className = 'form-status success';
+                    formStatus.innerHTML = '<i class="fa-solid fa-circle-check"></i> Orçamento gerado com sucesso! Redirecionando para o WhatsApp...';
 
-    // 7. Back to Top Button
-    const backToTopBtn = document.getElementById('backToTop');
+                    // Open WhatsApp
+                    setTimeout(() => {
+                        window.open(whatsappUrl, '_blank');
+                        contactForm.reset();
+                        formStatus.innerHTML = '';
+                        formStatus.className = 'form-status';
+                    }, 1200);
 
-    if (backToTopBtn) {
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 400) {
-                backToTopBtn.classList.add('active');
-            } else {
-                backToTopBtn.classList.remove('active');
+                }, 1000);
             }
         });
 
-        backToTopBtn.addEventListener('click', () => {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
+        // Realtime input clear error validation on type
+        const formInputs = contactForm.querySelectorAll('input, textarea');
+        formInputs.forEach(input => {
+            input.addEventListener('input', () => {
+                if (input.value.trim().length > 0) {
+                    input.parentElement.classList.remove('invalid');
+                }
             });
         });
     }
 
-    // 8. Navigation Active Link States on Scroll
-    const sections = document.querySelectorAll('section[id]');
-    
-    window.addEventListener('scroll', () => {
-        let scrollY = window.pageYOffset;
-        
-        sections.forEach(current => {
-            const sectionHeight = current.offsetHeight;
-            const sectionTop = current.offsetTop - 120;
-            const sectionId = current.getAttribute('id');
-            
-            if (scrollY > sectionTop && scrollY <= sectionTop + sectionHeight) {
-                document.querySelector('.nav-menu a[href*=' + sectionId + ']')?.classList.add('active');
-            } else {
-                document.querySelector('.nav-menu a[href*=' + sectionId + ']')?.classList.remove('active');
+    // --- 8. SMOOTH SCROLL OFFSET FOR ANCHOR LINKS ---
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href');
+            if (targetId === '#') return;
+
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
+                const headerHeight = header.clientHeight;
+                const offsetPosition = targetElement.offsetTop - headerHeight;
+
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                });
             }
         });
     });
