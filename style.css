@@ -360,12 +360,12 @@ img {
 
 .hero-section {
     position: relative;
-    height: 100vh;
-    min-height: 700px;
+    min-height: 100vh;
     display: flex;
     align-items: center;
-    padding-top: 100px;
-    overflow: hidden;
+    padding-top: 150px;
+    padding-bottom: 140px;
+    overflow: visible;
     /* Custom blueprints background styling */
     background-image: 
         radial-gradient(circle at 80% 20%, rgba(212, 175, 55, 0.06) 0%, transparent 50%),
@@ -498,7 +498,7 @@ img {
 .metrics-section {
     position: relative;
     z-index: 10;
-    margin-top: 50px; /* Shifted down so it sits below the hero section without overlapping buttons */
+    margin-top: -80px; /* Elegant floating premium overlay */
     padding-bottom: 30px;
 }
 
@@ -1733,6 +1733,11 @@ img {
     
     .btn-nav-cta {
         display: none;
+    }
+    
+    .metrics-section {
+        margin-top: 30px;
+        padding-bottom: 10px;
     }
     
     .metrics-grid {

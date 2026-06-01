@@ -56,8 +56,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }, {
-            threshold: 0.15,
-            rootMargin: '0px 0px -50px 0px'
+            threshold: 0.02, // Extremely sensitive trigger
+            rootMargin: '0px 0px 150px 0px' // Starts animating 150px before entering viewport
         });
 
         revealElements.forEach(el => revealObserver.observe(el));
@@ -65,6 +65,16 @@ document.addEventListener('DOMContentLoaded', () => {
         // Fallback for older browsers
         revealElements.forEach(el => el.classList.add('active'));
     }
+
+    // Safety timeout fallback: Make sure everything is visible after a short duration
+    // even if IntersectionObserver fails to fire due to height or viewport edge cases.
+    setTimeout(() => {
+        revealElements.forEach(el => {
+            if (!el.classList.contains('active')) {
+                el.classList.add('active');
+            }
+        });
+    }, 1500);
 
     // 4. Metrics Animated Counters
     const metricsSection = document.querySelector('.metrics-section');
