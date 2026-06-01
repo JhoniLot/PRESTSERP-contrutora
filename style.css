@@ -498,7 +498,8 @@ img {
 .metrics-section {
     position: relative;
     z-index: 10;
-    margin-top: -60px; /* Overlap hero */
+    margin-top: 50px; /* Shifted down so it sits below the hero section without overlapping buttons */
+    padding-bottom: 30px;
 }
 
 .metrics-grid {
