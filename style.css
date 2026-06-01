@@ -539,7 +539,7 @@ img {
     border: 1px solid rgba(212, 175, 55, 0.15);
 }
 
-.metric-number {
+.metric-number, .metric-number-static {
     font-size: 2.2rem;
     font-weight: 800;
     font-family: var(--font-heading);
